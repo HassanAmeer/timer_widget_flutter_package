@@ -2,7 +2,7 @@
 
 
   - ### Fully Customized
-    - ### can used be as a widget OR Button
+    - ### can be used as a widget OR Button
 
 
 ## Features
@@ -14,7 +14,7 @@
   
 ## Usage
    ### ScreenShot
-   <img src="screenshots/timer_widget.png" style="width:50%">
+   <img src="https://github.com/HassanAmeer/timer_widget_flutter_package/blob/master/screenshots/timer_widget.png" style="width:50%">
    <hr>
 
    ### Example

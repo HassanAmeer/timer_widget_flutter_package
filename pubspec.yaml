@@ -3,9 +3,9 @@ description: "with Timer Widget Can Customize As a button Or wrap On any Widget 
 version: 0.0.2
 homepage:  https://github.com/HassanAmeer
 # on home page github or google link
-# documentation: https://github.com/ProjectAJ14/timer_button
-# repository: https://github.com/ProjectAJ14/timer_button
-# issue_tracker: https://github.com/ProjectAJ14/timer_button/issues
+documentation: https://github.com/HassanAmeer/timer_widget_flutter_package
+repository: https://github.com/HassanAmeer/timer_widget_flutter_package
+issue_tracker: https://github.com/HassanAmeer/timer_widget_flutter_package/issues
 
 
 
