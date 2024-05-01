@@ -14,7 +14,7 @@
   
 ## Usage
    ### ScreenShot
-   <img src="screenshots/timer_widget.png" style="width:50%">
+   <img src="[screenshots/timer_widget.png](https://github.com/HassanAmeer/timer_widget_flutter_package/blob/master/screenshots/timer_widget.png)" style="width:50%">
    <hr>
 
    ### Example
