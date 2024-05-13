@@ -1,6 +1,6 @@
 name: timer_widget
 description: "Timer Widget Can be fully Customized can be used As a button Or widget. can check timer start end and Durations. can be handle outside of the widget by controller."
-version: 0.0.3
+version: 0.0.4
 homepage:  https://github.com/HassanAmeer/timer_widget_flutter_package
 # on home page github or google link
 documentation: https://github.com/HassanAmeer/timer_widget_flutter_package
@@ -16,6 +16,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  provider: ^6.1.2
+  
 
   # for test to other applications Local Path
   # my_new_package:
