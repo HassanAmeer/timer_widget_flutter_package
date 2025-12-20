@@ -1,11 +1,12 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [1.0.0] - 2024-12-20
+- 🕣 stop wacth features added
 
 ## [1.0.0] - 2024-12-20
 
 ### 🎉 Major Release - Complete Rewrite
-
 #### ✨ New Features
 
 - **Global Static Controller** 🎮

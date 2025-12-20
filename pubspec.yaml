@@ -3,7 +3,7 @@ description: >
   All-in-one Flutter timer widget with countdown, cooldown, debounce, and async loader. 
   Perfect for OTP resend buttons, rate limiting, form submission, API loading with retry. 
   Zero dependencies - internal state management. Fully customizable with controller support.
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/HassanAmeer/timer_widget_flutter_package
 repository: https://github.com/HassanAmeer/timer_widget_flutter_package
 issue_tracker: https://github.com/HassanAmeer/timer_widget_flutter_package/issues
