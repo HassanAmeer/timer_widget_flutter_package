@@ -4,6 +4,7 @@
 - [livedbs.web.app](https://livedbs.web.app/)
 
 ## ✨ Features
+- ⏱️ **CountUp Timer** - Simple countUp with pause/resume (infinity).
 - ⏱️ **Countdown Timer** - Simple countdown with pause/resume
 - ❄️ **Cooldown Button** - OTP resend, rate-limited actions
 - 🛡️ **Debounce Button** - Prevent rapid clicks, form submission
@@ -285,6 +286,28 @@ TimerWidget<UserData>(
 TimerWidgetController.execute("user_loader");  // Load
 TimerWidgetController.retry("user_loader");    // Retry
 TimerWidgetController.reset("user_loader");    // Reset
+```
+
+### 5. Stopwatch (Count-up Timer)
+
+Excellent for showing elapsed time during long operations or API calls. Starts at 0 and increments every second. If an `asyncOperation` is provided, it automatically stops when the operation finishes.
+
+```dart
+TimerWidget<String>(
+  id: "api_sync",
+  timerType: TimerType.stopwatch,
+  asyncOperation: () => longRunningTask(),
+  autoStart: false,
+  builder: (context, state) {
+    if (state.isLoading) {
+      return Text("Task in progress... Elapsed: ${state.remainingSeconds}s");
+    }
+    if (state.isSuccess) {
+      return Text("Completed in ${state.remainingSeconds}s!");
+    }
+    return Text("Start Task");
+  },
+)
 ```
 
 ---

@@ -509,7 +509,9 @@ class _TimerWidgetState<T> extends State<TimerWidget<T>> {
 
   void _resumeCountdown() {
     if (!mounted) return;
-    if (!_state.isPaused || _state.remainingSeconds <= 0) return;
+    final isStopwatch = widget.timerType == TimerType.stopwatch;
+    if (!_state.isPaused) return;
+    if (!isStopwatch && _state.remainingSeconds <= 0) return;
 
     // Cancel any existing timer first
     _timer?.cancel();
