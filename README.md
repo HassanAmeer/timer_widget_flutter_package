@@ -375,7 +375,7 @@ Contributions are welcome! Please open an issue or PR on [GitHub](https://github
 
 ## Our Other Packages
 
-[![livedb](https://img.shields.io/pub/v/livedb.svg)](https://pub.dev/packages/livedb)
-[![media_link_generator](https://img.shields.io/pub/v/media_link_generator.svg)](https://pub.dev/packages/media_link_generator)
-[![mediagetter](https://img.shields.io/pub/v/mediagetter.svg)](https://pub.dev/packages/mediagetter)
-[![contacts_getter](https://img.shields.io/pub/v/contacts_getter.svg)](https://pub.dev/packages/contacts_getter)
+- **[LiveDB](https://pub.dev/packages/livedb)**: [![livedb](https://img.shields.io/pub/v/livedb.svg)](https://pub.dev/packages/livedb) - A powerful local database with reactive streams.
+- **[Media Link Generator](https://pub.dev/packages/media_link_generator)**: [![media_link_generator](https://img.shields.io/pub/v/media_link_generator.svg)](https://pub.dev/packages/media_link_generator) - Generate direct download links for various cloud storages.
+- **[MediaGetter](https://pub.dev/packages/mediagetter)**: [![mediagetter](https://img.shields.io/pub/v/mediagetter.svg)](https://pub.dev/packages/mediagetter) - Complete solution for picking and managing media files.
+- **[Contacts Getter](https://pub.dev/packages/contacts_getter)**: [![contacts_getter](https://img.shields.io/pub/v/contacts_getter.svg)](https://pub.dev/packages/contacts_getter) - Access and manage device contacts and messages.

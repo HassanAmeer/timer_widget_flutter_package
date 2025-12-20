@@ -62,6 +62,9 @@ enum TimerType {
 
   /// Async operation handler with loading state and retry
   asyncLoader,
+
+  /// Infinite timer that counts up (stopwatch style)
+  stopwatch,
 }
 
 /// Select Button Type
@@ -262,6 +265,7 @@ class _TimerWidgetActions {
 /// - `TimerType.cooldown` - Button with cooldown (OTP/resend)
 /// - `TimerType.debounce` - Prevents rapid clicks
 /// - `TimerType.asyncLoader` - Async ops with loading/retry
+/// - `TimerType.stopwatch` - Infinite count-up timer (useful for API loading)
 ///
 /// ## Example - Just give ID and control from anywhere!
 /// ```dart
@@ -400,6 +404,9 @@ class _TimerWidgetState<T> extends State<TimerWidget<T>> {
       case TimerType.asyncLoader:
         _executeAsync();
         break;
+      case TimerType.stopwatch:
+        _startCountdown();
+        break;
       case TimerType.debounce:
         // Debounce doesn't auto-start
         break;
@@ -431,9 +438,17 @@ class _TimerWidgetState<T> extends State<TimerWidget<T>> {
       _state = _state.copyWith(
         isCounting: true,
         isPaused: false,
-        remainingSeconds: widget.timeOutInSeconds,
+        remainingSeconds: widget.timerType == TimerType.stopwatch
+            ? 0
+            : widget.timeOutInSeconds,
       );
     });
+
+    // If stopwatch and asyncOperation is provided, start it too
+    if (widget.timerType == TimerType.stopwatch &&
+        widget.asyncOperation != null) {
+      _executeAsync();
+    }
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
@@ -441,7 +456,9 @@ class _TimerWidgetState<T> extends State<TimerWidget<T>> {
         return;
       }
 
-      if (_state.remainingSeconds <= 1) {
+      final isStopwatch = widget.timerType == TimerType.stopwatch;
+
+      if (!isStopwatch && _state.remainingSeconds <= 1) {
         timer.cancel();
         _timer = null;
         setState(() {
@@ -455,7 +472,9 @@ class _TimerWidgetState<T> extends State<TimerWidget<T>> {
       } else {
         setState(() {
           _state = _state.copyWith(
-            remainingSeconds: _state.remainingSeconds - 1,
+            remainingSeconds: isStopwatch
+                ? _state.remainingSeconds + 1
+                : _state.remainingSeconds - 1,
           );
         });
       }
@@ -506,7 +525,9 @@ class _TimerWidgetState<T> extends State<TimerWidget<T>> {
         return;
       }
 
-      if (_state.remainingSeconds <= 1) {
+      final isStopwatch = widget.timerType == TimerType.stopwatch;
+
+      if (!isStopwatch && _state.remainingSeconds <= 1) {
         timer.cancel();
         _timer = null;
         setState(() {
@@ -520,7 +541,9 @@ class _TimerWidgetState<T> extends State<TimerWidget<T>> {
       } else {
         setState(() {
           _state = _state.copyWith(
-            remainingSeconds: _state.remainingSeconds - 1,
+            remainingSeconds: isStopwatch
+                ? _state.remainingSeconds + 1
+                : _state.remainingSeconds - 1,
           );
         });
       }
@@ -550,8 +573,17 @@ class _TimerWidgetState<T> extends State<TimerWidget<T>> {
       final result = await widget.asyncOperation!();
       if (!mounted) return;
 
+      // If it's a stopwatch, stop it now
+      if (widget.timerType == TimerType.stopwatch) {
+        _timer?.cancel();
+        _timer = null;
+      }
+
       setState(() {
         _state = TimerWidgetState(
+          remainingSeconds: _state.remainingSeconds,
+          isCounting: false,
+          isPaused: false,
           isLoading: false,
           isSuccess: true,
           isError: false,
@@ -570,12 +602,21 @@ class _TimerWidgetState<T> extends State<TimerWidget<T>> {
           await _performAsyncOperation();
         }
       } else {
+        // If it's a stopwatch, stop it on error too after all retries
+        if (widget.timerType == TimerType.stopwatch) {
+          _timer?.cancel();
+          _timer = null;
+        }
+
         setState(() {
           _state = TimerWidgetState(
+            remainingSeconds: _state.remainingSeconds,
             isLoading: false,
             isSuccess: false,
             isError: true,
             error: e,
+            isCounting: false,
+            isPaused: false,
           );
         });
         widget.onError?.call(e);
@@ -665,6 +706,14 @@ class _TimerWidgetState<T> extends State<TimerWidget<T>> {
       case TimerType.asyncLoader:
         _executeAsync();
         break;
+      case TimerType.stopwatch:
+        if (_state.isCounting && !_state.isPaused) {
+          _stopCountdown();
+        } else {
+          widget.onPressed?.call();
+          _startCountdown();
+        }
+        break;
     }
   }
 
@@ -680,6 +729,8 @@ class _TimerWidgetState<T> extends State<TimerWidget<T>> {
         return _state.isLoading;
       case TimerType.asyncLoader:
         return _state.isLoading;
+      case TimerType.stopwatch:
+        return false; // Stopwatch is usually manually stopped
     }
   }
 

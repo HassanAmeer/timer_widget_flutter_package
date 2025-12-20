@@ -39,12 +39,13 @@ class ExampleHomePage extends StatefulWidget {
 class _ExampleHomePageState extends State<ExampleHomePage> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = const [
-    CountdownExample(),
-    CooldownExample(),
-    DebounceExample(),
-    AsyncLoaderExample(),
-    GlobalControlExample(),
+  final List<Widget> _pages = [
+    const CountdownExample(),
+    const CooldownExample(),
+    const DebounceExample(),
+    const AsyncLoaderExample(),
+    const StopwatchExample(),
+    const GlobalControlExample(),
   ];
 
   final List<String> _titles = const [
@@ -52,6 +53,7 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
     'Cooldown',
     'Debounce',
     'Async',
+    'Stopwatch',
     'Global Control',
   ];
 
@@ -89,6 +91,11 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
             icon: Icon(Icons.cloud_download_outlined),
             selectedIcon: Icon(Icons.cloud_download),
             label: 'Async',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.speed_outlined),
+            selectedIcon: Icon(Icons.speed),
+            label: 'Stopwatch',
           ),
           NavigationDestination(
             icon: Icon(Icons.gamepad_outlined),
@@ -803,6 +810,152 @@ TimerWidgetController.stopAll();''',
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// EXAMPLE 6: STOPWATCH (COUNT UP)
+// ============================================================================
+
+class StopwatchExample extends StatefulWidget {
+  const StopwatchExample({super.key});
+
+  @override
+  State<StopwatchExample> createState() => _StopwatchExampleState();
+}
+
+class _StopwatchExampleState extends State<StopwatchExample> {
+  Future<String> _simulateLongApiCall() async {
+    await Future.delayed(const Duration(seconds: 4));
+    return "API Loaded Successfully after 4 seconds!";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildInfoCard(
+            title: "TimerType.stopwatch",
+            description:
+                "An infinite count-up timer. Excellent for showing elapsed time during long API calls. Starts at 0 and increments every second.",
+            codeExample: '''
+TimerWidget<String>(
+  id: "api_stopwatch",
+  timerType: TimerType.stopwatch,
+  asyncOperation: () => loadData(),
+  autoStart: false,
+  builder: (context, state) {
+    if (state.isLoading) {
+      return Text("Loading... Elapsed: \${state.remainingSeconds}s");
+    }
+    return Text("Start API Call with Timer");
+  },
+)''',
+          ),
+          const SizedBox(height: 24),
+          Card(
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const Text(
+                    "API Loader with Stopwatch",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                  TimerWidget<String>(
+                    id: "stopwatch_demo",
+                    timerType: TimerType.stopwatch,
+                    asyncOperation: _simulateLongApiCall,
+                    buttonType: ButtonType.none,
+                    builder: (context, state) {
+                      return Column(
+                        children: [
+                          _buildStopwatchDisplay(state.remainingSeconds),
+                          const SizedBox(height: 20),
+                          if (state.isLoading) ...[
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 12),
+                            const Text("API call in progress...",
+                                style: TextStyle(fontStyle: FontStyle.italic)),
+                          ] else if (state.isSuccess) ...[
+                            const Icon(Icons.check_circle,
+                                color: Colors.green, size: 48),
+                            const SizedBox(height: 12),
+                            Text(state.data as String,
+                                textAlign: TextAlign.center),
+                          ] else if (state.isError) ...[
+                            const Icon(Icons.error,
+                                color: Colors.red, size: 48),
+                            const SizedBox(height: 12),
+                            Text("Error: ${state.error}"),
+                          ] else ...[
+                            const Text("Ready to fetch data"),
+                          ],
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: () =>
+                            TimerWidgetController.start("stopwatch_demo"),
+                        icon: const Icon(Icons.play_arrow),
+                        label: const Text("Start API Call"),
+                      ),
+                      const SizedBox(width: 12),
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            TimerWidgetController.stop("stopwatch_demo"),
+                        icon: const Icon(Icons.stop),
+                        label: const Text("Manual Stop"),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            "Note: The timer starts at 0 and stops automatically when the API call finishes.",
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStopwatchDisplay(int seconds) {
+    final minutes = (seconds / 60).floor();
+    final remainingSecs = seconds % 60;
+    final timeStr =
+        "${minutes.toString().padLeft(2, '0')}:${remainingSecs.toString().padLeft(2, '0')}";
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade900,
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Text(
+        timeStr,
+        style: const TextStyle(
+          color: Colors.greenAccent,
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'monospace',
         ),
       ),
     );
