@@ -1,4 +1,5 @@
 # Timer Widget
+
 - 🌍 updated by livedbs (Free Live Database, Storage)
 - [livedbs.web.app](https://livedbs.web.app/)
 
@@ -7,11 +8,12 @@
 - ❄️ **Cooldown Button** - OTP resend, rate-limited actions
 - 🛡️ **Debounce Button** - Prevent rapid clicks, form submission
 - 🔄 **Async Loader** - API calls with auto-retry support
-- 🎮 **Controller** - External control (start, stop, pause, resume)
+- 🎮 **Global Controller** - Control ANY timer from ANYWHERE by ID
 - 🎨 **Customizable** - Multiple button types, custom styles
 - 📦 **Zero Dependencies** - No Provider, no external packages
 
 A powerful, **all-in-one Flutter timer widget** for countdown timers, cooldown buttons, debounce buttons, and async loading. Perfect for **OTP resend**, **rate limiting**, **form submission**, and **API calls with retry**.
+
 **Zero external dependencies** - all state management is handled internally!
 
 ![demo](screenshots/demo.png)
@@ -20,10 +22,6 @@ A powerful, **all-in-one Flutter timer widget** for countdown timers, cooldown b
 [![likes](https://img.shields.io/pub/likes/timer_widget)](https://pub.dev/packages/timer_widget/score)
 [![popularity](https://img.shields.io/pub/popularity/timer_widget)](https://pub.dev/packages/timer_widget/score)
 [![pub points](https://img.shields.io/pub/points/timer_widget)](https://pub.dev/packages/timer_widget/score)
-
-
-
-
 
 ## 📦 Installation
 
@@ -54,12 +52,163 @@ TimerWidget(
 | `debounce` | Prevent rapid clicks | Form submission |
 | `asyncLoader` | Async operations with retry | API calls, data loading |
 
+---
+
+## 🎮 Global Controller - Control from ANYWHERE!
+
+**Just give widget an `id` and control from any widget, class, or file!**
+
+### Step 1: Give widgets unique IDs
+
+```dart
+// OTP Button
+TimerWidget(
+  id: "otp_button",  // Unique ID
+  timerType: TimerType.cooldown,
+  timeOutInSeconds: 30,
+  builder: (context, state) {
+    if (state.isCounting) {
+      return Text("Resend in ${state.remainingSeconds}s");
+    }
+    return Text("Send OTP");
+  },
+)
+
+// Submit Button
+TimerWidget(
+  id: "submit_button",  // Different ID
+  timerType: TimerType.debounce,
+  asyncOperation: () async => await submitForm(),
+  builder: (context, state) {
+    return Text(state.isLoading ? "Submitting..." : "Submit");
+  },
+)
+```
+
+### Step 2: Control from ANYWHERE!
+
+```dart
+// From any widget, any page, any class!
+TimerWidgetController.start("otp_button");
+TimerWidgetController.stop("otp_button");
+TimerWidgetController.pause("otp_button");
+TimerWidgetController.resume("otp_button");
+```
+
+### Step 3: Check state from ANYWHERE!
+
+```dart
+// Get state
+TimerWidgetController.isCounting("otp_button");      // bool
+TimerWidgetController.isPaused("otp_button");        // bool
+TimerWidgetController.remainingSeconds("otp_button"); // int
+TimerWidgetController.isLoading("submit_button");    // bool
+TimerWidgetController.isSuccess("submit_button");    // bool
+TimerWidgetController.isError("submit_button");      // bool
+TimerWidgetController.getData("loader");             // dynamic
+TimerWidgetController.getError("loader");            // Object?
+```
+
+### Bulk Control All Timers
+
+```dart
+TimerWidgetController.startAll();
+TimerWidgetController.stopAll();
+TimerWidgetController.pauseAll();
+TimerWidgetController.resumeAll();
+TimerWidgetController.resetAll();
+```
+
+### Utility Methods
+
+```dart
+TimerWidgetController.allIds;        // List<String> - all registered IDs
+TimerWidgetController.hasId("x");    // bool - check if exists
+TimerWidgetController.count;         // int - number of registered timers
+```
+
+---
+
+## 📱 Complete Example
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:timer_widget/timer_widget.dart';
+
+class MyPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // OTP Resend Button
+        TimerWidget(
+          id: "otp",
+          timerType: TimerType.cooldown,
+          timeOutInSeconds: 30,
+          buttonType: ButtonType.outline,
+          onPressed: () => sendOTP(),
+          builder: (context, state) {
+            if (state.isCounting) {
+              return Text("Resend in ${state.remainingSeconds}s");
+            }
+            return Text("Send OTP");
+          },
+        ),
+
+        // Form Submit with Debounce
+        TimerWidget<void>(
+          id: "submit",
+          timerType: TimerType.debounce,
+          debounceMs: 500,
+          buttonType: ButtonType.elevated,
+          asyncOperation: () async {
+            await submitForm();
+          },
+          builder: (context, state) {
+            if (state.isLoading) {
+              return CircularProgressIndicator();
+            }
+            return Text("Submit");
+          },
+        ),
+
+        // External Control Buttons
+        ElevatedButton(
+          onPressed: () => TimerWidgetController.start("otp"),
+          child: Text("Force Send OTP"),
+        ),
+        ElevatedButton(
+          onPressed: () => TimerWidgetController.stopAll(),
+          child: Text("Stop All Timers"),
+        ),
+      ],
+    );
+  }
+}
+
+// Control from ANY class - like a service/provider!
+class AuthService {
+  static void onLogout() {
+    // Stop all timers when user logs out
+    TimerWidgetController.stopAll();
+  }
+  
+  static void refreshOTP() {
+    // Control specific timer
+    TimerWidgetController.start("otp");
+  }
+}
+```
+
+---
+
 ## 🚀 Quick Examples
 
 ### 1. Countdown Timer
 
 ```dart
 TimerWidget(
+  id: "countdown",
   timerType: TimerType.countdown,
   timeOutInSeconds: 5,
   buttonType: ButtonType.elevated,
@@ -78,6 +227,7 @@ TimerWidget(
 
 ```dart
 TimerWidget(
+  id: "otp_resend",
   timerType: TimerType.cooldown,
   timeOutInSeconds: 30,
   buttonType: ButtonType.outline,
@@ -95,6 +245,7 @@ TimerWidget(
 
 ```dart
 TimerWidget<void>(
+  id: "form_submit",
   timerType: TimerType.debounce,
   debounceMs: 500,
   buttonType: ButtonType.elevated,
@@ -114,6 +265,7 @@ TimerWidget<void>(
 
 ```dart
 TimerWidget<UserData>(
+  id: "user_loader",
   timerType: TimerType.asyncLoader,
   asyncOperation: () => fetchUserData(),
   retryCount: 3,
@@ -128,7 +280,14 @@ TimerWidget<UserData>(
     return Text("Tap to load");
   },
 )
+
+// Control from anywhere
+TimerWidgetController.execute("user_loader");  // Load
+TimerWidgetController.retry("user_loader");    // Retry
+TimerWidgetController.reset("user_loader");    // Reset
 ```
+
+---
 
 ## 📖 State Object
 
@@ -147,43 +306,13 @@ builder: (context, state) {
 }
 ```
 
-## 🎮 Controller (Optional)
-
-Use a controller for external control:
-
-```dart
-final controller = TimerWidgetController<String>();
-
-// In your widget
-TimerWidget(
-  controller: controller,
-  // ...
-)
-
-// Control externally
-controller.startTimer();    // Start countdown
-controller.stopTimer();     // Stop and reset
-controller.pauseTimer();    // Pause countdown
-controller.resumeTimer();   // Resume from pause
-controller.execute();       // Execute async operation
-controller.retry();         // Retry failed operation
-controller.reset();         // Reset to initial state
-
-// Read state
-controller.isCounting;      // bool
-controller.isPaused;        // bool
-controller.remainingSeconds;// int
-controller.isLoading;       // bool
-controller.isSuccess;       // bool
-controller.isError;         // bool
-controller.data;            // T?
-controller.error;           // Object?
-```
+---
 
 ## ⚙️ All Properties
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
+| `id` | `String?` | `null` | **Unique ID for global control** |
 | `timerType` | `TimerType` | `countdown` | Widget behavior mode |
 | `builder` | `Function` | required | Build the UI |
 | `timeOutInSeconds` | `int` | `5` | Countdown/cooldown duration |
@@ -199,7 +328,8 @@ controller.error;           // Object?
 | `retryDelay` | `Duration` | `1s` | Retry delay |
 | `onSuccess` | `Function(T)?` | `null` | Success callback |
 | `onError` | `Function(Object)?` | `null` | Error callback |
-| `controller` | `TimerWidgetController?` | `null` | External controller |
+
+---
 
 ## 🎨 Button Types
 
@@ -210,6 +340,8 @@ ButtonType.outline   // OutlinedButton
 ButtonType.icon      // IconButton
 ```
 
+---
+
 ## 📱 Example App
 
 Check the `/example` folder for a complete demo app with all features.
@@ -219,11 +351,15 @@ cd example
 flutter run
 ```
 
+---
+
 ## 🔑 Keywords
 
 `flutter timer`, `countdown widget`, `cooldown button`, `otp resend flutter`, 
 `debounce button`, `async loader`, `loading button`, `rate limit`, 
-`flutter button timer`, `countdown button`, `timer controller`
+`flutter button timer`, `countdown button`, `timer controller`, `global controller`
+
+---
 
 ## 📄 License
 
@@ -233,13 +369,13 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 Contributions are welcome! Please open an issue or PR on [GitHub](https://github.com/HassanAmeer/timer_widget_flutter_package).
 
+---
 
 <img src="screenshots/demo.png"/>
 
-## Our Others packages
+## Our Other Packages
 
-[![livedb](livedb)](https://pub.dev/packages/livedb)
-[![media_link_generator](media_link_generator)](https://pub.dev/packages/media_link_generator)
-[![mediagetter](mediagetter)](https://pub.dev/packages/mediagetter)
-[![contacts_getter](contacts_getter)](https://pub.dev/packages/contacts_getter)
-[![timer_widget](timer_widget)](https://pub.dev/packages/timer_widget/)
+[![livedb](https://img.shields.io/pub/v/livedb.svg)](https://pub.dev/packages/livedb)
+[![media_link_generator](https://img.shields.io/pub/v/media_link_generator.svg)](https://pub.dev/packages/media_link_generator)
+[![mediagetter](https://img.shields.io/pub/v/mediagetter.svg)](https://pub.dev/packages/mediagetter)
+[![contacts_getter](https://img.shields.io/pub/v/contacts_getter.svg)](https://pub.dev/packages/contacts_getter)

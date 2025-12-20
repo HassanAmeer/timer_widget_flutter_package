@@ -44,13 +44,15 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
     CooldownExample(),
     DebounceExample(),
     AsyncLoaderExample(),
+    GlobalControlExample(),
   ];
 
   final List<String> _titles = const [
-    'Countdown Timer',
-    'Cooldown (OTP)',
-    'Debounce Button',
-    'Async Loader',
+    'Countdown',
+    'Cooldown',
+    'Debounce',
+    'Async',
+    'Global Control',
   ];
 
   @override
@@ -88,6 +90,11 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
             selectedIcon: Icon(Icons.cloud_download),
             label: 'Async',
           ),
+          NavigationDestination(
+            icon: Icon(Icons.gamepad_outlined),
+            selectedIcon: Icon(Icons.gamepad),
+            label: 'Global',
+          ),
         ],
       ),
     );
@@ -98,16 +105,6 @@ class _ExampleHomePageState extends State<ExampleHomePage> {
 // EXAMPLE 1: COUNTDOWN TIMER
 // ============================================================================
 
-/// ## TimerType.countdown
-///
-/// Use this for simple countdown timers.
-/// Great for rate limiting, cooldowns, timeouts, etc.
-///
-/// ### Features:
-/// - Start/Stop/Pause/Resume via controller
-/// - Auto-start option
-/// - `onComplete` callback when timer finishes
-/// - `disableDuringCounting` to prevent clicks while counting
 class CountdownExample extends StatefulWidget {
   const CountdownExample({super.key});
 
@@ -116,8 +113,6 @@ class CountdownExample extends StatefulWidget {
 }
 
 class _CountdownExampleState extends State<CountdownExample> {
-  // Create a controller for external control
-  final TimerWidgetController controller = TimerWidgetController();
   String message = "Press the button to start countdown";
 
   @override
@@ -127,32 +122,25 @@ class _CountdownExampleState extends State<CountdownExample> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Description Card
           _buildInfoCard(
             title: "TimerType.countdown",
             description:
-                "A simple countdown timer. Disables the button while counting down. "
-                "Use the controller to start, stop, pause, or resume externally.",
+                "A simple countdown timer. Just give it an 'id' and control from anywhere!",
             codeExample: '''
 TimerWidget(
+  id: "my_timer",  // Just give an ID!
   timerType: TimerType.countdown,
   timeOutInSeconds: 5,
-  buttonType: ButtonType.elevated,
-  controller: controller,
-  onPressed: () => print("Started!"),
-  onComplete: () => print("Done!"),
   builder: (context, state) {
-    if (state.isCounting) {
-      return Text("Wait \${state.remainingSeconds}s");
-    }
-    return Text("Click Me");
+    return Text(state.isCounting ? "\${state.remainingSeconds}s" : "Start");
   },
-)''',
+)
+
+// Control from ANYWHERE:
+TimerWidgetController.start("my_timer");
+TimerWidgetController.stop("my_timer");''',
           ),
-
           const SizedBox(height: 24),
-
-          // Status Message
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -165,16 +153,13 @@ TimerWidget(
               style: const TextStyle(fontSize: 16),
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // The Timer Widget
           Center(
             child: TimerWidget(
+              id: "countdown_demo",
               timerType: TimerType.countdown,
               timeOutInSeconds: 5,
               buttonType: ButtonType.elevated,
-              controller: controller,
               disableDuringCounting: true,
               onPressed: () {
                 setState(() => message = "⏳ Counting down...");
@@ -204,55 +189,51 @@ TimerWidget(
               },
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // External Control Buttons
-          _buildControlButtons(),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Control via TimerWidgetController",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.tonal(
+                        onPressed: () =>
+                            TimerWidgetController.start("countdown_demo"),
+                        child: const Text("Start"),
+                      ),
+                      FilledButton.tonal(
+                        onPressed: () =>
+                            TimerWidgetController.pause("countdown_demo"),
+                        child: const Text("Pause"),
+                      ),
+                      FilledButton.tonal(
+                        onPressed: () =>
+                            TimerWidgetController.resume("countdown_demo"),
+                        child: const Text("Resume"),
+                      ),
+                      FilledButton.tonal(
+                        onPressed: () {
+                          TimerWidgetController.stop("countdown_demo");
+                          setState(() => message = "Timer stopped");
+                        },
+                        child: const Text("Stop"),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildControlButtons() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "External Control (via Controller)",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                FilledButton.tonal(
-                  onPressed: () => controller.startTimer(),
-                  child: const Text("Start"),
-                ),
-                FilledButton.tonal(
-                  onPressed: () => controller.pauseTimer(),
-                  child: const Text("Pause"),
-                ),
-                FilledButton.tonal(
-                  onPressed: () => controller.resumeTimer(),
-                  child: const Text("Resume"),
-                ),
-                FilledButton.tonal(
-                  onPressed: () {
-                    controller.stopTimer();
-                    setState(() => message = "Timer stopped");
-                  },
-                  child: const Text("Stop"),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -262,15 +243,6 @@ TimerWidget(
 // EXAMPLE 2: COOLDOWN BUTTON (OTP/Resend)
 // ============================================================================
 
-/// ## TimerType.cooldown
-///
-/// Use this for buttons that need a cooldown period after each press.
-/// Perfect for OTP resend, rate-limited actions, etc.
-///
-/// ### Features:
-/// - Button automatically disabled during cooldown
-/// - Shows remaining seconds
-/// - Re-enables when cooldown expires
 class CooldownExample extends StatefulWidget {
   const CooldownExample({super.key});
 
@@ -288,17 +260,15 @@ class _CooldownExampleState extends State<CooldownExample> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Description Card
           _buildInfoCard(
             title: "TimerType.cooldown",
             description:
-                "Perfect for OTP resend buttons. After pressing, the button enters "
-                "a cooldown period and shows a countdown. User cannot press again until cooldown expires.",
+                "Perfect for OTP resend buttons. Button is disabled during cooldown.",
             codeExample: '''
 TimerWidget(
+  id: "otp_button",
   timerType: TimerType.cooldown,
   timeOutInSeconds: 30,
-  buttonType: ButtonType.outline,
   onPressed: () => sendOTP(),
   builder: (context, state) {
     if (state.isCounting) {
@@ -308,10 +278,7 @@ TimerWidget(
   },
 )''',
           ),
-
           const SizedBox(height: 24),
-
-          // OTP Input Simulation
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -330,34 +297,30 @@ TimerWidget(
                     style: TextStyle(color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 20),
-
-                  // OTP Input Fields (decorative)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
-                        4,
-                        (index) => Container(
-                              width: 50,
-                              height: 50,
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                    color: Colors.grey.shade300, width: 2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Center(
-                                child:
-                                    Text("•", style: TextStyle(fontSize: 24)),
-                              ),
-                            )),
+                      4,
+                      (index) => Container(
+                        width: 50,
+                        height: 50,
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          border:
+                              Border.all(color: Colors.grey.shade300, width: 2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Center(
+                          child: Text("•", style: TextStyle(fontSize: 24)),
+                        ),
+                      ),
+                    ),
                   ),
-
                   const SizedBox(height: 24),
-
-                  // Cooldown Timer Widget
                   TimerWidget(
+                    id: "otp_cooldown",
                     timerType: TimerType.cooldown,
-                    timeOutInSeconds: 10, // 10 seconds for demo
+                    timeOutInSeconds: 10,
                     buttonType: ButtonType.none,
                     onPressed: () {
                       setState(() => otpSentCount++);
@@ -377,7 +340,7 @@ TimerWidget(
                         );
                       }
                       return TextButton.icon(
-                        onPressed: null, // Handled by TimerWidget
+                        onPressed: null,
                         icon: const Icon(Icons.refresh),
                         label: const Text("Resend OTP"),
                       );
@@ -397,15 +360,6 @@ TimerWidget(
 // EXAMPLE 3: DEBOUNCE BUTTON
 // ============================================================================
 
-/// ## TimerType.debounce
-///
-/// Use this to prevent rapid/duplicate button clicks.
-/// Great for form submissions, API calls, etc.
-///
-/// ### Features:
-/// - Shows loading state during async operation
-/// - Prevents clicking while loading
-/// - Debounce delay after completion
 class DebounceExample extends StatefulWidget {
   const DebounceExample({super.key});
 
@@ -417,7 +371,6 @@ class _DebounceExampleState extends State<DebounceExample> {
   List<String> submissions = [];
 
   Future<void> _submitForm() async {
-    // Simulate API call
     await Future.delayed(const Duration(milliseconds: 800));
     setState(() {
       submissions
@@ -432,33 +385,23 @@ class _DebounceExampleState extends State<DebounceExample> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Description Card
           _buildInfoCard(
             title: "TimerType.debounce",
             description:
-                "Prevents rapid button clicks and duplicate submissions. "
-                "Shows loading state during async operation. "
-                "Has a debounce delay after completion.",
+                "Prevents rapid button clicks. Shows loading during async operation.",
             codeExample: '''
 TimerWidget<void>(
+  id: "submit_btn",
   timerType: TimerType.debounce,
   debounceMs: 500,
-  buttonType: ButtonType.elevated,
-  asyncOperation: () async {
-    await submitForm();
-  },
+  asyncOperation: () async => await submitForm(),
   builder: (context, state) {
-    if (state.isLoading) {
-      return Text("Submitting...");
-    }
+    if (state.isLoading) return Text("Submitting...");
     return Text("Submit");
   },
 )''',
           ),
-
           const SizedBox(height: 24),
-
-          // Form Card
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -470,7 +413,6 @@ TimerWidget<void>(
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-
                   TextFormField(
                     decoration: const InputDecoration(
                       labelText: "Name",
@@ -485,9 +427,8 @@ TimerWidget<void>(
                     ),
                   ),
                   const SizedBox(height: 20),
-
-                  // Debounce Submit Button
                   TimerWidget<void>(
+                    id: "debounce_submit",
                     timerType: TimerType.debounce,
                     debounceMs: 500,
                     buttonType: ButtonType.elevated,
@@ -518,10 +459,7 @@ TimerWidget<void>(
               ),
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // Submissions Log
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -547,7 +485,7 @@ TimerWidget<void>(
                     const Padding(
                       padding: EdgeInsets.all(16),
                       child: Text(
-                        "No submissions yet. Try clicking the button rapidly!",
+                        "No submissions yet. Try clicking rapidly!",
                         style: TextStyle(color: Colors.grey),
                       ),
                     )
@@ -577,16 +515,6 @@ TimerWidget<void>(
 // EXAMPLE 4: ASYNC LOADER
 // ============================================================================
 
-/// ## TimerType.asyncLoader
-///
-/// Use this for loading data with automatic retry support.
-/// Great for API calls, data fetching, etc.
-///
-/// ### Features:
-/// - Loading, success, error states
-/// - Auto-retry on failure
-/// - Manual retry support
-/// - Access to data and error in state
 class AsyncLoaderExample extends StatefulWidget {
   const AsyncLoaderExample({super.key});
 
@@ -595,23 +523,17 @@ class AsyncLoaderExample extends StatefulWidget {
 }
 
 class _AsyncLoaderExampleState extends State<AsyncLoaderExample> {
-  final TimerWidgetController<Map<String, dynamic>> controller =
-      TimerWidgetController();
   bool shouldFail = false;
 
-  // Simulate API call
   Future<Map<String, dynamic>> _fetchUserData() async {
     await Future.delayed(const Duration(seconds: 2));
-
     if (shouldFail) {
-      throw Exception("Network error - Please check your connection");
+      throw Exception("Network error");
     }
-
     return {
       "name": "John Doe",
       "email": "john@example.com",
       "role": "Developer",
-      "joinedAt": "2024-01-15",
     };
   }
 
@@ -622,60 +544,48 @@ class _AsyncLoaderExampleState extends State<AsyncLoaderExample> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Description Card
           _buildInfoCard(
             title: "TimerType.asyncLoader",
-            description: "Perfect for loading data from APIs. "
-                "Handles loading, success, and error states. "
-                "Supports automatic retry on failure.",
+            description: "Load data with auto-retry support.",
             codeExample: '''
 TimerWidget<UserData>(
+  id: "user_loader",
   timerType: TimerType.asyncLoader,
-  asyncOperation: () => fetchUserData(),
+  asyncOperation: () => fetchUser(),
   retryCount: 2,
-  autoStart: true,
   builder: (context, state) {
     if (state.isLoading) return CircularProgressIndicator();
-    if (state.isError) return Text("Error: \${state.error}");
-    if (state.isSuccess) return Text("Data: \${state.data}");
+    if (state.isError) return Text("Error!");
+    if (state.isSuccess) return Text("\${state.data}");
     return Text("Tap to load");
   },
-)''',
+)
+
+// Control from anywhere:
+TimerWidgetController.execute("user_loader");
+TimerWidgetController.retry("user_loader");''',
           ),
-
           const SizedBox(height: 24),
-
-          // Toggle for simulating failure
           Card(
             color: shouldFail ? Colors.red.shade50 : Colors.green.shade50,
             child: SwitchListTile(
               title: Text(
-                shouldFail ? "Simulate API Failure" : "Simulate API Success",
+                shouldFail ? "Simulate Failure" : "Simulate Success",
                 style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(
-                shouldFail
-                    ? "Next load will fail and trigger retry"
-                    : "Next load will succeed",
               ),
               value: shouldFail,
               onChanged: (value) => setState(() => shouldFail = value),
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // Async Loader Widget
           TimerWidget<Map<String, dynamic>>(
+            id: "async_loader_demo",
             timerType: TimerType.asyncLoader,
-            controller: controller,
             asyncOperation: _fetchUserData,
             retryCount: 2,
             retryDelay: const Duration(seconds: 1),
             autoStart: false,
             buttonType: ButtonType.none,
-            onSuccess: (data) => debugPrint("Loaded: $data"),
-            onError: (error) => debugPrint("Error: $error"),
             builder: (context, state) {
               return Card(
                 child: Padding(
@@ -685,15 +595,13 @@ TimerWidget<UserData>(
               );
             },
           ),
-
           const SizedBox(height: 16),
-
-          // Manual control
           Row(
             children: [
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: () => controller.execute(),
+                  onPressed: () =>
+                      TimerWidgetController.execute("async_loader_demo"),
                   icon: const Icon(Icons.refresh),
                   label: const Text("Load Data"),
                 ),
@@ -701,7 +609,8 @@ TimerWidget<UserData>(
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () => controller.reset(),
+                  onPressed: () =>
+                      TimerWidgetController.reset("async_loader_demo"),
                   icon: const Icon(Icons.clear),
                   label: const Text("Reset"),
                 ),
@@ -714,96 +623,188 @@ TimerWidget<UserData>(
   }
 
   Widget _buildAsyncContent(TimerWidgetState state) {
-    // Loading State
     if (state.isLoading) {
-      return Column(
+      return const Column(
         children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: 16),
-          Text(
-            "Loading user data...",
-            style: TextStyle(color: Colors.grey.shade600),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "(Will auto-retry 2x on failure)",
-            style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
-          ),
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text("Loading..."),
         ],
       );
     }
 
-    // Success State
     if (state.isSuccess && state.data != null) {
       final data = state.data as Map<String, dynamic>;
       return Column(
         children: [
-          const CircleAvatar(
-            radius: 40,
-            backgroundColor: Colors.indigo,
-            child: Icon(Icons.person, size: 40, color: Colors.white),
-          ),
+          const Icon(Icons.check_circle, size: 48, color: Colors.green),
           const SizedBox(height: 16),
-          Text(
-            data["name"] ?? "",
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            data["email"] ?? "",
-            style: TextStyle(color: Colors.grey.shade600),
-          ),
-          const SizedBox(height: 12),
-          Chip(label: Text(data["role"] ?? "")),
-          const SizedBox(height: 8),
-          Text(
-            "Joined: ${data["joinedAt"]}",
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-          ),
+          Text(data["name"] ?? "",
+              style:
+                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          Text(data["email"] ?? ""),
         ],
       );
     }
 
-    // Error State
     if (state.isError) {
       return Column(
         children: [
-          const Icon(Icons.error_outline, size: 48, color: Colors.red),
+          const Icon(Icons.error, size: 48, color: Colors.red),
           const SizedBox(height: 16),
-          const Text(
-            "Failed to Load",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "${state.error}",
-            style: const TextStyle(color: Colors.red),
-            textAlign: TextAlign.center,
-          ),
+          Text("${state.error}", style: const TextStyle(color: Colors.red)),
           const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: () => controller.retry(),
-            icon: const Icon(Icons.refresh),
-            label: const Text("Retry"),
+          FilledButton(
+            onPressed: () => TimerWidgetController.retry("async_loader_demo"),
+            child: const Text("Retry"),
           ),
         ],
       );
     }
 
-    // Idle State
     return Column(
       children: [
         Icon(Icons.cloud_download, size: 48, color: Colors.grey.shade400),
         const SizedBox(height: 16),
-        const Text(
-          "No Data Loaded",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          "Tap 'Load Data' to fetch user information",
-          style: TextStyle(color: Colors.grey.shade600),
-        ),
+        const Text("Tap 'Load Data' to fetch"),
       ],
+    );
+  }
+}
+
+// ============================================================================
+// EXAMPLE 5: GLOBAL CONTROL - Multiple timers controlled from anywhere!
+// ============================================================================
+
+class GlobalControlExample extends StatelessWidget {
+  const GlobalControlExample({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildInfoCard(
+            title: "Global TimerWidgetController",
+            description:
+                "Control ANY timer from ANYWHERE! Just give widgets an 'id' and use static methods.",
+            codeExample: '''
+// Give widgets unique IDs
+TimerWidget(id: "timer1", ...)
+TimerWidget(id: "timer2", ...)
+
+// Control from ANYWHERE - no passing needed!
+TimerWidgetController.start("timer1");
+TimerWidgetController.stop("timer2");
+TimerWidgetController.pauseAll();
+TimerWidgetController.stopAll();''',
+          ),
+
+          const SizedBox(height: 24),
+
+          // Multiple timer widgets
+          _buildTimerRow("button_1", "Timer 1", Colors.blue),
+          _buildTimerRow("button_2", "Timer 2", Colors.green),
+          _buildTimerRow("button_3", "Timer 3", Colors.orange),
+          _buildTimerRow("button_4", "Timer 4", Colors.purple),
+
+          const SizedBox(height: 24),
+
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Global Control Panel",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: () => TimerWidgetController.startAll(),
+                        icon: const Icon(Icons.play_arrow),
+                        label: const Text("Start All"),
+                      ),
+                      FilledButton.icon(
+                        onPressed: () => TimerWidgetController.stopAll(),
+                        icon: const Icon(Icons.stop),
+                        label: const Text("Stop All"),
+                        style:
+                            FilledButton.styleFrom(backgroundColor: Colors.red),
+                      ),
+                      FilledButton.icon(
+                        onPressed: () => TimerWidgetController.pauseAll(),
+                        icon: const Icon(Icons.pause),
+                        label: const Text("Pause All"),
+                        style: FilledButton.styleFrom(
+                            backgroundColor: Colors.orange),
+                      ),
+                      FilledButton.icon(
+                        onPressed: () => TimerWidgetController.resetAll(),
+                        icon: const Icon(Icons.restart_alt),
+                        label: const Text("Reset All"),
+                        style: FilledButton.styleFrom(
+                            backgroundColor: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimerRow(String id, String label, Color color) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: color.withValues(alpha: 0.2),
+              child: Icon(Icons.timer, color: color),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text('id: "$id"',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+            ),
+            TimerWidget(
+              id: id,
+              timerType: TimerType.countdown,
+              timeOutInSeconds: 5,
+              buttonType: ButtonType.elevated,
+              buttonStyle: ElevatedButton.styleFrom(backgroundColor: color),
+              builder: (context, state) {
+                if (state.isCounting) {
+                  return Text("${state.remainingSeconds}s",
+                      style: const TextStyle(color: Colors.white));
+                }
+                return const Text("Start",
+                    style: TextStyle(color: Colors.white));
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -824,24 +825,20 @@ Widget _buildInfoCard({
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.indigo,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.indigo,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
               ),
-            ],
+            ),
           ),
           const SizedBox(height: 12),
           Text(description),
@@ -849,7 +846,6 @@ Widget _buildInfoCard({
           ExpansionTile(
             title: const Text("View Code", style: TextStyle(fontSize: 14)),
             tilePadding: EdgeInsets.zero,
-            childrenPadding: EdgeInsets.zero,
             children: [
               Container(
                 width: double.infinity,

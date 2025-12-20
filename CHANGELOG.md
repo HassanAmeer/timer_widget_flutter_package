@@ -7,11 +7,48 @@ All notable changes to this project will be documented in this file.
 ### 🎉 Major Release - Complete Rewrite
 
 #### ✨ New Features
+
+- **Global Static Controller** 🎮
+  - Control ANY timer from ANYWHERE using `TimerWidgetController.start("id")`
+  - No need to pass controller around!
+  - Just give widget an `id` parameter
+  
 - **Four Timer Types** - Select behavior with `timerType`:
   - `TimerType.countdown` - Simple countdown timer
   - `TimerType.cooldown` - OTP resend / cooldown button
   - `TimerType.debounce` - Prevent rapid clicks
   - `TimerType.asyncLoader` - Async loading with retry
+
+- **Global Control Methods**
+  ```dart
+  TimerWidgetController.start("id");
+  TimerWidgetController.stop("id");
+  TimerWidgetController.pause("id");
+  TimerWidgetController.resume("id");
+  TimerWidgetController.execute("id");  // For async
+  TimerWidgetController.retry("id");
+  TimerWidgetController.reset("id");
+  ```
+
+- **Bulk Control**
+  ```dart
+  TimerWidgetController.startAll();
+  TimerWidgetController.stopAll();
+  TimerWidgetController.pauseAll();
+  TimerWidgetController.resetAll();
+  ```
+
+- **State Getters**
+  ```dart
+  TimerWidgetController.isCounting("id");
+  TimerWidgetController.isPaused("id");
+  TimerWidgetController.remainingSeconds("id");
+  TimerWidgetController.isLoading("id");
+  TimerWidgetController.isSuccess("id");
+  TimerWidgetController.isError("id");
+  TimerWidgetController.getData("id");
+  TimerWidgetController.getError("id");
+  ```
 
 - **Async Loader Support**
   - Execute async operations (API calls)
@@ -19,48 +56,28 @@ All notable changes to this project will be documented in this file.
   - `retryDelay` between attempts
   - `onSuccess` and `onError` callbacks
 
-- **Debounce Button**
-  - Prevents duplicate form submissions
-  - Configurable `debounceMs` delay
-  - Shows loading state during operation
-
-- **Enhanced Controller**
-  - `pauseTimer()` - Pause countdown
-  - `resumeTimer()` - Resume from pause
-  - `execute()` - Trigger async operation
-  - `retry()` - Retry failed operation
-  - `reset()` - Reset to initial state
-  - Access `isPaused`, `isLoading`, `isSuccess`, `isError`, `data`, `error`
-
 - **State Object**
   - `TimerWidgetState` with all information
   - `remainingSeconds`, `isCounting`, `isPaused`
   - `isLoading`, `isSuccess`, `isError`, `data`, `error`
 
-- **New Properties**
-  - `autoStart` - Auto-start on widget mount
-  - `onComplete` - Callback when timer/operation completes
-
-#### 🐛 Bug Fixes
-- Fixed multiple timers issue when clicking rapidly
-- Fixed controller pause/resume not working
-- Timer properly cancelled before starting new one
-
 #### 💥 Breaking Changes
+- Removed `controller` parameter - use `id` instead!
 - Removed `provider` dependency - zero external dependencies now!
-- Builder signature changed: `(context, state)` instead of `(context, seconds, isCounting)`
-- Controller is now optional (was required)
+- Builder signature: `(context, state)` with full `TimerWidgetState`
 
 #### 📦 Other
 - Updated to support Flutter 3.10+ and Dart 3.0+
-- Added comprehensive example app with 4 tabs
+- Added comprehensive example app with 5 tabs
 - Added SEO topics for pub.dev ranking
+
+---
 
 ## [0.0.4] - Previous Version
 
 - Basic countdown timer functionality
 - Required provider dependency
-- Basic controller support
+- Basic controller support (passed via parameter)
 
 ## [0.0.3] - [0.0.1]
 
